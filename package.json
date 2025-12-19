@@ -3,19 +3,34 @@
   "version": "1.0.0",
   "description": "MCP server for Piwik PRO analytics",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aplaceforallmystuff/mcp-piwik.git"
+  },
+  "homepage": "https://github.com/aplaceforallmystuff/mcp-piwik#readme",
+  "bugs": {
+    "url": "https://github.com/aplaceforallmystuff/mcp-piwik/issues"
+  },
   "bin": {
-    "mcp-piwik": "./dist/index.js"
+    "mcp-piwik": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch"
   },
-  "keywords": ["mcp", "piwik", "analytics", "piwik-pro"],
+  "keywords": [
+    "mcp",
+    "piwik",
+    "analytics",
+    "piwik-pro"
+  ],
   "author": "Jim Christian",
   "license": "MIT",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
     "zod": "^4.2.1"
