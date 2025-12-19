@@ -21,9 +21,13 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "claude",
     "piwik",
+    "piwik-pro",
     "analytics",
-    "piwik-pro"
+    "web-analytics"
   ],
   "author": "Jim Christian",
   "license": "MIT",
