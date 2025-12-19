@@ -1,5 +1,9 @@
 # mcp-piwik
 
+[![npm version](https://img.shields.io/npm/v/mcp-piwik.svg)](https://www.npmjs.com/package/mcp-piwik)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-blue.svg)](https://modelcontextprotocol.io)
+
 MCP server for Piwik PRO analytics - query your website analytics data directly from Claude.
 
 ## Features
@@ -119,11 +123,13 @@ List common dimensions and metrics available for queries.
 ## Example Usage
 
 ```
-"Show me the top 10 pages on my jimchristian.net site for the last 7 days"
+"Show me the top 10 pages on my site for the last 7 days"
 
-"What are my traffic sources for Framework Prompting this month?"
+"What are my traffic sources this month?"
 
-"Give me a summary of MyCityZen analytics for December"
+"Give me an analytics summary for December"
+
+"Run a custom query for sessions and visitors by country"
 ```
 
 ## License
@@ -132,4 +138,4 @@ MIT
 
 ## Author
 
-Jim Christian - https://jimchristian.net
+Jim Christian - [https://jimchristian.net](https://jimchristian.net)
