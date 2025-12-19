@@ -5,9 +5,14 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 
 // Configuration from environment
-const PIWIK_ACCOUNT = process.env.PIWIK_ACCOUNT || "informatic";
+const PIWIK_ACCOUNT = process.env.PIWIK_ACCOUNT;
 const PIWIK_CLIENT_ID = process.env.PIWIK_CLIENT_ID;
 const PIWIK_CLIENT_SECRET = process.env.PIWIK_CLIENT_SECRET;
+
+if (!PIWIK_ACCOUNT) {
+  console.error("Error: PIWIK_ACCOUNT environment variable is required");
+  process.exit(1);
+}
 
 const BASE_URL = `https://${PIWIK_ACCOUNT}.piwik.pro`;
 
