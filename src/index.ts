@@ -4,6 +4,56 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
+// Type definitions for Piwik API responses
+interface PiwikSite {
+  id: string;
+  type: string;
+  attributes?: {
+    name?: string;
+    createdAt?: string;
+  };
+}
+
+interface PiwikSitesResponse {
+  data?: PiwikSite[];
+}
+
+interface PiwikQueryResponse {
+  data?: unknown[];
+  meta?: Record<string, unknown>;
+}
+
+interface PiwikTokenResponse {
+  access_token: string;
+  expires_in: number;
+}
+
+// Helper: Get date range with defaults
+function getDateRange(dateFrom?: string, dateTo?: string): { from: string; to: string } {
+  const today = new Date().toISOString().split("T")[0];
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  return {
+    from: dateFrom || thirtyDaysAgo,
+    to: dateTo || today,
+  };
+}
+
+// Helper: Sanitize error messages to avoid exposing API internals
+function sanitizeError(error: unknown): string {
+  if (error instanceof Error) {
+    // Remove potentially sensitive details from error messages
+    const message = error.message;
+    if (message.includes("Auth failed")) {
+      return "Authentication failed. Check your PIWIK_CLIENT_ID and PIWIK_CLIENT_SECRET.";
+    }
+    if (message.includes("API error")) {
+      return `API request failed. ${message.split(" - ")[0]}`;
+    }
+    return message;
+  }
+  return "An unexpected error occurred";
+}
+
 // Configuration from environment
 const PIWIK_ACCOUNT = process.env.PIWIK_ACCOUNT;
 const PIWIK_CLIENT_ID = process.env.PIWIK_CLIENT_ID;
@@ -45,14 +95,14 @@ async function getAccessToken(): Promise<string> {
     throw new Error(`Auth failed: ${response.status} - ${text}`);
   }
 
-  const data = await response.json();
+  const data: PiwikTokenResponse = await response.json();
   accessToken = data.access_token;
   tokenExpiry = Date.now() + (data.expires_in * 1000);
 
-  return accessToken!;
+  return accessToken;
 }
 
-async function piwikRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+async function piwikRequest<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = await getAccessToken();
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -85,9 +135,9 @@ server.tool(
   {},
   async () => {
     try {
-      const data = await piwikRequest("/api/apps/v2");
+      const data = await piwikRequest<PiwikSitesResponse>("/api/apps/v2");
 
-      const sites = data.data?.map((site: any) => ({
+      const sites = data.data?.map((site) => ({
         id: site.id,
         name: site.attributes?.name,
         type: site.type,
@@ -102,7 +152,7 @@ server.tool(
       };
     } catch (error) {
       return {
-        content: [{ type: "text", text: `Error: ${error}` }],
+        content: [{ type: "text", text: `Error: ${sanitizeError(error)}` }],
         isError: true,
       };
     }
@@ -120,14 +170,9 @@ server.tool(
   },
   async ({ siteId, dateFrom, dateTo }) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      const from = dateFrom || thirtyDaysAgo;
-      const to = dateTo || today;
+      const { from, to } = getDateRange(dateFrom, dateTo);
 
       const query = {
-        relative_date: "custom",
         date_from: from,
         date_to: to,
         website_id: siteId,
@@ -136,14 +181,13 @@ server.tool(
           { column_id: "page_views" },
           { column_id: "visitors" },
           { column_id: "bounce_rate" },
-          { column_id: "avg_session_time" },
         ],
         order_by: [[0, "desc"]],
         offset: 0,
         limit: 1,
       };
 
-      const data = await piwikRequest("/api/analytics/v1/query/", {
+      const data = await piwikRequest<PiwikQueryResponse>("/api/analytics/v1/query/", {
         method: "POST",
         body: JSON.stringify(query),
       });
@@ -161,7 +205,7 @@ server.tool(
       };
     } catch (error) {
       return {
-        content: [{ type: "text", text: `Error: ${error}` }],
+        content: [{ type: "text", text: `Error: ${sanitizeError(error)}` }],
         isError: true,
       };
     }
@@ -180,14 +224,9 @@ server.tool(
   },
   async ({ siteId, dateFrom, dateTo, limit = 10 }) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      const from = dateFrom || thirtyDaysAgo;
-      const to = dateTo || today;
+      const { from, to } = getDateRange(dateFrom, dateTo);
 
       const query = {
-        relative_date: "custom",
         date_from: from,
         date_to: to,
         website_id: siteId,
@@ -195,14 +234,13 @@ server.tool(
           { column_id: "page_url" },
           { column_id: "page_views" },
           { column_id: "visitors" },
-          { column_id: "avg_time_on_page" },
         ],
         order_by: [[1, "desc"]],
         offset: 0,
         limit,
       };
 
-      const data = await piwikRequest("/api/analytics/v1/query/", {
+      const data = await piwikRequest<PiwikQueryResponse>("/api/analytics/v1/query/", {
         method: "POST",
         body: JSON.stringify(query),
       });
@@ -219,7 +257,7 @@ server.tool(
       };
     } catch (error) {
       return {
-        content: [{ type: "text", text: `Error: ${error}` }],
+        content: [{ type: "text", text: `Error: ${sanitizeError(error)}` }],
         isError: true,
       };
     }
@@ -237,14 +275,9 @@ server.tool(
   },
   async ({ siteId, dateFrom, dateTo }) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      const from = dateFrom || thirtyDaysAgo;
-      const to = dateTo || today;
+      const { from, to } = getDateRange(dateFrom, dateTo);
 
       const query = {
-        relative_date: "custom",
         date_from: from,
         date_to: to,
         website_id: siteId,
@@ -259,7 +292,7 @@ server.tool(
         limit: 20,
       };
 
-      const data = await piwikRequest("/api/analytics/v1/query/", {
+      const data = await piwikRequest<PiwikQueryResponse>("/api/analytics/v1/query/", {
         method: "POST",
         body: JSON.stringify(query),
       });
@@ -276,7 +309,7 @@ server.tool(
       };
     } catch (error) {
       return {
-        content: [{ type: "text", text: `Error: ${error}` }],
+        content: [{ type: "text", text: `Error: ${sanitizeError(error)}` }],
         isError: true,
       };
     }
@@ -294,14 +327,9 @@ server.tool(
   },
   async ({ siteId, dateFrom, dateTo }) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      const from = dateFrom || thirtyDaysAgo;
-      const to = dateTo || today;
+      const { from, to } = getDateRange(dateFrom, dateTo);
 
       const query = {
-        relative_date: "custom",
         date_from: from,
         date_to: to,
         website_id: siteId,
@@ -316,7 +344,7 @@ server.tool(
         limit: 50,
       };
 
-      const data = await piwikRequest("/api/analytics/v1/query/", {
+      const data = await piwikRequest<PiwikQueryResponse>("/api/analytics/v1/query/", {
         method: "POST",
         body: JSON.stringify(query),
       });
@@ -333,7 +361,7 @@ server.tool(
       };
     } catch (error) {
       return {
-        content: [{ type: "text", text: `Error: ${error}` }],
+        content: [{ type: "text", text: `Error: ${sanitizeError(error)}` }],
         isError: true,
       };
     }
@@ -353,14 +381,9 @@ server.tool(
   },
   async ({ siteId, columns, dateFrom, dateTo, limit = 50 }) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-      const from = dateFrom || thirtyDaysAgo;
-      const to = dateTo || today;
+      const { from, to } = getDateRange(dateFrom, dateTo);
 
       const query = {
-        relative_date: "custom",
         date_from: from,
         date_to: to,
         website_id: siteId,
@@ -370,7 +393,7 @@ server.tool(
         limit,
       };
 
-      const data = await piwikRequest("/api/analytics/v1/query/", {
+      const data = await piwikRequest<PiwikQueryResponse>("/api/analytics/v1/query/", {
         method: "POST",
         body: JSON.stringify(query),
       });
@@ -389,7 +412,7 @@ server.tool(
       };
     } catch (error) {
       return {
-        content: [{ type: "text", text: `Error: ${error}` }],
+        content: [{ type: "text", text: `Error: ${sanitizeError(error)}` }],
         isError: true,
       };
     }
