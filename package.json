@@ -1,6 +1,6 @@
 {
   "name": "mcp-piwik",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for Piwik PRO analytics",
   "main": "dist/index.js",
   "repository": {
@@ -12,7 +12,8 @@
     "url": "https://github.com/aplaceforallmystuff/mcp-piwik/issues"
   },
   "bin": {
-    "mcp-piwik": "dist/index.js"
+    "mcp-piwik": "dist/index.js",
+    "piwik": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",

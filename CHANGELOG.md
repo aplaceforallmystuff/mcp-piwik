@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-01-13
+
+### Changed
+- Updated `@modelcontextprotocol/sdk` to 1.25.2
+- Updated `@types/node` to 25.0.8
+- Updated `zod` to 4.3.5
+
+### Added
+- Project logo artwork
+- Added `.claude/` to `.gitignore`
+
 ## [1.0.0] - 2025-12-19
 
 ### Added

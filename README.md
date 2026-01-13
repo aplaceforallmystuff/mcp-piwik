@@ -1,5 +1,9 @@
 # mcp-piwik
 
+<p align="center">
+  <img src="docs/mcp-piwik-logo.png" alt="MCP Piwik Server" width="400">
+</p>
+
 [![npm version](https://img.shields.io/npm/v/mcp-piwik.svg)](https://www.npmjs.com/package/mcp-piwik)
 [![CI](https://github.com/aplaceforallmystuff/mcp-piwik/actions/workflows/ci.yml/badge.svg)](https://github.com/aplaceforallmystuff/mcp-piwik/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
