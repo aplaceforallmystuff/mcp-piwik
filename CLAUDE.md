@@ -46,3 +46,7 @@ npm start           # node dist/index.js
 - `sanitizeError()` strips sensitive details from error messages
 - All analytics queries POST to `/api/analytics/v1/query/`
 - All three env vars required at startup (exits if missing)
+
+## Pre-Publish
+
+Run `/publish-mcp` before any `npm publish` — mandatory pipeline that handles tests, secret scan, sanitize, docs check, version bump, tag, push, and publish in strict order. Do not run `npm publish` directly.
